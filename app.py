@@ -10,7 +10,7 @@ import re  # Thư viện để xử lý văn bản
 # --- 1.1. HÀM CHUẨN HÓA TÊN CỘT ---
 def simple_normalize(col_name):
     """
-    Hàm này "sơ chế" tên cột:
+    Hàm này thay đổi tên cột:
     1. Chuyển thành chữ thường.
     2. Bỏ dấu tiếng Việt.
     3. Thay thế khoảng trắng, dấu chấm, gạch ngang bằng dấu gạch dưới '_'.
@@ -94,7 +94,7 @@ COLUMN_MAP = {
 # --- 1.4. HÀM ĐỔI TÊN VÀ KIỂM TRA ---
 def rename_and_validate(df):
     """
-    Hàm này tự động đổi tên các cột của file tải lên theo tên "chuẩn"
+    Hàm này tự động đổi tên các cột của file tải lên theo tên chuẩn
     và kiểm tra xem có bị thiếu cột nào không.
     """
     original_cols = df.columns
@@ -314,10 +314,10 @@ if uploaded_file is not None:
         else:
             st.error(f"""
                 **Lỗi Cấu Trúc File!**
-                Ứng dụng đã cố gắng "sơ chế" file của bạn nhưng vẫn không tìm thấy các cột "chuẩn" cần thiết.
-                Các cột "chuẩn" mà ứng dụng cần là: `{', '.join(CANONICAL_COLUMNS)}`
-                Các cột "chuẩn" bị thiếu trong file của bạn là: `{', '.join(missing_or_duplicate_cols)}`
-                **Gợi ý:** Vui lòng kiểm tra file Excel/CSV, đảm bảo bạn có các cột như "Ngày Đặt Hàng", "Số Lượng", "Đơn Giá"...
+                \nỨng dụng đã cố gắng đọc file của bạn nhưng vẫn không tìm thấy các cột cần thiết.
+                \nCác cột chuẩn mà ứng dụng cần là: `{', '.join(CANONICAL_COLUMNS)}`
+                \nCác cột bị thiếu trong file của bạn là: `{', '.join(missing_or_duplicate_cols)}`
+                \n**Gợi ý:** Vui lòng kiểm tra file Excel/CSV, đảm bảo bạn có các cột như "Ngày Đặt Hàng", "Số Lượng", "Đơn Giá"...
             """)
 
     except Exception as e:
