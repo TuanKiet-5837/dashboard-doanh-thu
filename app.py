@@ -1,5 +1,3 @@
-# app.py (Phiên bản Đã Sửa Lỗi + Tối Ưu)
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -21,7 +19,7 @@ def simple_normalize(col_name):
     normalized = re.sub(r'[^a-z0-9_]', '', normalized)
     return normalized.strip('_')
 
-# --- 2. DANH SÁCH CÁC CỘT "CHUẨN" MÀ CHÚNG TA MUỐN ---
+# --- 2. DANH SÁCH CÁC CỘT CẦN THIẾT ---
 CANONICAL_COLUMNS = [
     'ngay_dat_hang',
     'ma_don_hang',
@@ -32,9 +30,9 @@ CANONICAL_COLUMNS = [
     'chi_phi'
 ]
 
-# --- 3. BẢN ĐỒ ÁNH XẠ (MAPPING) ---
+# --- 3. BẢN ĐỒ ÁNH XẠ ---
 COLUMN_MAP = {
-    'ngay_dat_hang': 'ngay_dat_hang', 'ngay_dat': 'ngay_dat_hang', 'order_date': 'ngay_dat_hang',
+    'ngay_dat_hang': 'ngay_dat_hang', 'ngay_dat': 'ngay_dat_hang', 'order_date': 'ngay_dat_hang', 'ngay_hang': 'ngay_dat_hang',
     'ma_don_hang': 'ma_don_hang', 'ma_don': 'ma_don_hang', 'order_id': 'ma_don_hang', 'ma_dh': 'ma_don_hang',
     'ten_san_pham': 'ten_san_pham', 'ten_sp': 'ten_san_pham', 'product_name': 'ten_san_pham',
     'danh_muc': 'danh_muc', 'category': 'danh_muc', 'phan_loai': 'danh_muc',
@@ -71,7 +69,6 @@ def rename_and_validate(df):
 # --- HÀM TÍNH TOÁN ---
 def calculate_metrics(df):
     # Đảm bảo các cột số là kiểu số trước khi tính toán
-    # Sử dụng errors='coerce' để chuyển đổi giá trị không hợp lệ thành NaN, sau đó fillna(0)
     df['so_luong'] = pd.to_numeric(df['so_luong'], errors='coerce').fillna(0)
     df['don_gia'] = pd.to_numeric(df['don_gia'], errors='coerce').fillna(0)
     df['chi_phi'] = pd.to_numeric(df['chi_phi'], errors='coerce').fillna(0)
@@ -80,8 +77,10 @@ def calculate_metrics(df):
     df['ngay_dat_hang'] = pd.to_datetime(df['ngay_dat_hang'], errors='coerce')
     df = df.dropna(subset=['ngay_dat_hang']) # Xóa các hàng có ngày tháng không hợp lệ
 
-    df['doanh_thu'] = df['so_luong'] * df['don_gia']
-    df['loi_nhuan'] = df['doanh_thu'] - (df['so_luong'] * df['chi_phi'])
+    # Chỉ tính toán nếu df vẫn còn dữ liệu
+    if not df.empty:
+        df['doanh_thu'] = df['so_luong'] * df['don_gia']
+        df['loi_nhuan'] = df['doanh_thu'] - (df['so_luong'] * df['chi_phi'])
     return df
 
 # --- HÀM DÀNH CHO NÚT TẢI XUỐNG ---
@@ -89,16 +88,14 @@ def calculate_metrics(df):
 def convert_df_to_csv(df):
     return df.to_csv(index=False).encode('utf-8-sig')
 
-
 # --- CẤU HÌNH TRANG WEB ---
 st.set_page_config(
     page_title="Dashboard Phân Tích Doanh Thu",
-    page_icon="💰", # Biểu tượng icon cho tab trình duyệt, đã thay thế
+    page_icon="💰", 
     layout="wide"
 )
 
 # --- GIAO DIỆN CHÍNH ---
-# Loại bỏ st.sidebar.image("...") để tránh lỗi hình ảnh
 st.title("💰 Dashboard Phân Tích Doanh Thu")
 st.markdown("---")
 
@@ -109,33 +106,30 @@ uploaded_file = st.sidebar.file_uploader("Chọn file Excel hoặc CSV", type=["
 if uploaded_file is not None:
     try:
         if uploaded_file.name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file, engine='openpyxl') # Đã sửa lỗi chính tả 'open_xl' -> 'openpyxl'
+            df = pd.read_excel(uploaded_file, engine='openpyxl') # Đã sửa lỗi 'open_xl'
         else:
             df = pd.read_csv(uploaded_file)
         
         is_valid, missing_or_duplicate_cols = rename_and_validate(df)
         
         if is_valid:
-            # --- KIỂM TRA DATAFRAME RỖNG (RẤT QUAN TRỌNG CHO LỖI test_empty_data.csv) ---
+            # --- KIỂM TRA DATAFRAME RỖNG ---
             if df.empty:
                 st.warning("File bạn tải lên không có dữ liệu để phân tích sau khi kiểm tra cấu trúc.")
             else:
                 df = calculate_metrics(df)
                 
-                # Sau khi tính toán xong, kiểm tra lại nếu có dòng nào bị xóa do lỗi ngày tháng
                 if df.empty:
                     st.warning("Không có dữ liệu hợp lệ để phân tích sau khi xử lý ngày tháng. Vui lòng kiểm tra lại cột ngày tháng.")
                 else:
                     st.sidebar.header("Bộ Lọc:")
                     
-                    # --- BỘ LỌC ---
                     category = st.sidebar.multiselect(
                         "Chọn Danh Mục:",
                         options=df["danh_muc"].unique(),
                         default=df["danh_muc"].unique()
                     )
 
-                    # Đảm bảo ngày tháng vẫn tồn tại sau khi calculate_metrics
                     min_date = df["ngay_dat_hang"].min().date()
                     max_date = df["ngay_dat_hang"].max().date()
                     date_range = st.sidebar.date_input(
@@ -223,12 +217,34 @@ if uploaded_file is not None:
                         )
                         fig_revenue_over_time.update_layout(plot_bgcolor="rgba(0,0,0,0)", xaxis=(dict(showgrid=False)))
 
-                        sales_by_product = df_selection.groupby("ten_san_pham")["so_luong"].sum().sort_values(ascending=True).reset_index()
+                        # --- NÂNG CẤP: HIỂN THỊ LỢI NHUẬN ÂM CHUYÊN NGHIỆP ---
+                        # (Code mới, thay thế cho code cũ)
+
+                        # 1. Tính toán lợi nhuận cho từng sản phẩm
+                        profit_by_product = df_selection.groupby("ten_san_pham")["loi_nhuan"].sum().sort_values().reset_index()
+
+                        # 2. Lọc ra 5 sản phẩm lỗ nhiều nhất và 5 sản phẩm lãi nhiều nhất
+                        # (Điều này giúp biểu đồ gọn gàng và tập trung vào vấn đề)
+                        top_5_profit = profit_by_product.tail(5)
+                        bottom_5_loss = profit_by_product.head(5)
+                        profit_loss_df = pd.concat([bottom_5_loss, top_5_profit])
+
+                        # 3. Tạo biểu đồ cột
                         fig_top_products = px.bar(
-                            sales_by_product.tail(10), x="so_luong", y="ten_san_pham", orientation="h",
-                            title="<b>Top 10 Sản Phẩm Bán Chạy Nhất</b>"
+                            profit_loss_df,
+                            x="loi_nhuan",
+                            y="ten_san_pham",
+                            orientation="h",
+                            title="<b>Top 5 Sản Phẩm Lãi & Lỗ Nhiều Nhất</b>",
+                            color="loi_nhuan",  # Thêm màu sắc để phân biệt
+                            color_continuous_scale='RdYlGn' # Đỏ (lỗ) - Vàng (hòa vốn) - Xanh (lãi)
                         )
-                        fig_top_products.update_layout(plot_bgcolor="rgba(0,0,0,0)", yaxis=dict(title=''))
+                        fig_top_products.update_layout(
+                            plot_bgcolor="rgba(0,0,0,0)", 
+                            yaxis_title="Tên Sản Phẩm",
+                            xaxis_title="Tổng Lợi Nhuận (VNĐ)",
+                            coloraxis_showscale=False # Ẩn thanh màu
+                        )
                         
                         fig_pie_chart = px.pie(
                             df_selection,
@@ -243,9 +259,11 @@ if uploaded_file is not None:
                         left_column.plotly_chart(fig_pie_chart, use_container_width=True)
                         right_column.plotly_chart(fig_top_products, use_container_width=True)
                         
+                        
                         st.markdown("### 📋 Dữ liệu chi tiết")
                         st.dataframe(df_selection)
                         
+                        # --- NÚT TẢI XUỐNG ---
                         csv_data = convert_df_to_csv(df_selection)
                         st.download_button(
                             label="📥 Tải dữ liệu đã lọc (CSV)",
@@ -258,10 +276,10 @@ if uploaded_file is not None:
         else:
             st.error(f"""
                 **Lỗi Cấu Trúc File!**
-                Ứng dụng đã cố gắng "sơ chế" file của bạn nhưng vẫn không tìm thấy các cột "chuẩn" cần thiết.
-                Các cột "chuẩn" mà ứng dụng cần là: `{', '.join(CANONICAL_COLUMNS)}`
-                Các cột "chuẩn" bị thiếu trong file của bạn là: `{', '.join(missing_or_duplicate_cols)}`
-                **Gợi ý:** Vui lòng kiểm tra file Excel/CSV, đảm bảo bạn có các cột như "Ngày Đặt Hàng", "Số Lượng", "Đơn Giá"...
+                \nFile của bạn đang bị thiếu những cột cần thiết.
+                \nCác cột mà ứng dụng cần là: `{', '.join(CANONICAL_COLUMNS)}`
+                \nCác cột bạn bị thiếu trong file là: `{', '.join(missing_or_duplicate_cols)}`
+                \n**Gợi ý:** Vui lòng kiểm tra file Excel/CSV, đảm bảo file có các cột như "Ngày Đặt Hàng", "Số Lượng", "Đơn Giá"...
             """)
 
     except Exception as e:
