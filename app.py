@@ -283,12 +283,7 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"Đã có lỗi nghiêm trọng xảy ra. Có thể file của bạn bị hỏng hoặc có kiểu dữ liệu không đúng (ví dụ: cột 'Số Lượng' chứa chữ). Lỗi: {e}")
 else:
-    # 1. Tiêu đề chào mừng
-    st.markdown("## 👋 Chào mừng bạn đến với Dashboard Phân Tích Doanh Thu")
-    st.markdown("##### Ứng dụng giúp biến file Excel khô khan thành biểu đồ trực quan chỉ trong 1 nốt nhạc! 🚀")
-    st.divider() # Đường kẻ ngang phân cách
-
-    # 2. Chia cột để bố trí thông tin cho đẹp 
+    # 1. Chia cột để bố trí thông tin cho đẹp 
     col_guide_1, col_guide_2 = st.columns(2)
 
     with col_guide_1:
@@ -313,22 +308,22 @@ else:
         st.markdown("""
         Sau khi bạn tải file lên, hệ thống sẽ tự động thực hiện:
         
-        * 🧹 **Làm sạch dữ liệu:** Tự động sửa lỗi tên cột, xử lý các ô bị trống hoặc lỗi định dạng.
-        * 🧮 **Tính toán tự động:**
+        * **Làm sạch dữ liệu:** Tự động sửa lỗi tên cột, xử lý các ô bị trống hoặc lỗi định dạng.
+        * **Tính toán tự động:**
             * `Tổng Doanh Thu` = Số lượng * Đơn giá
             * `Tổng Lợi Nhuận` = Doanh thu - (Số lượng * Chi phí)
             * `Tỷ suất lợi nhuận` (%)
-        * 📈 **Vẽ biểu đồ:**
+        * **Vẽ biểu đồ:**
             * Xu hướng doanh thu theo thời gian.
             * Top sản phẩm bán chạy.
             * So sánh Lãi/Lỗ từng sản phẩm.
         """)
 
-    # 3. Hướng dẫn sử dụng 
+    # 2. Hướng dẫn sử dụng 
     st.warning("### 3. Hướng dẫn sử dụng nhanh")
     st.markdown("""
     1.  **Chuẩn bị file:** Đảm bảo file Excel/CSV của bạn có các cột như hướng dẫn ở mục 1.
-    2.  **Tải lên:** Nhìn sang **Thanh bên trái (Sidebar)**, nhấn nút **"Browse files"** để chọn file.
+    2.  **Tải lên:** Nhìn sang **cột bên trái**, nhấn nút **"Browse files"** để chọn file.
     3.  **Phân tích:** Đợi 1-2 giây, Dashboard sẽ hiện ra. Bạn có thể dùng bộ lọc bên trái để xem chi tiết theo tháng hoặc danh mục.
     4.  **Xuất báo cáo:** Kéo xuống cuối trang để tải về file dữ liệu đã được làm sạch.
     """)
