@@ -221,7 +221,7 @@ if uploaded_file is not None:
                         right_column.plotly_chart(fig_top_products, use_container_width=True)
 
                         # =========================================================
-                        # KHÔNG GIAN AI NÂNG CAO (Nằm bên dưới giao diện gốc)
+                        # TÍCH HỢP AI
                         # =========================================================
                         st.markdown("---")
                         st.markdown("### 🤖 Tính Năng Tăng Cường Trí Tuệ Nhân Tạo (AI)")
@@ -234,10 +234,10 @@ if uploaded_file is not None:
                         ])
 
                         with tab1:
-                            st.markdown("#### Dự Báo Doanh Thu 30 Ngày Tới (Linear Regression nâng cao)")
+                            st.markdown("#### Dự Báo Doanh Thu 30 Ngày Tiếp Theo")
                             df_ai = revenue_by_date.copy()
                             if len(df_ai) > 3:
-                                # TÍNH NĂNG MỚI: Dạy AI nhận biết Thứ trong tuần
+                                # Nhận biết Thứ trong tuần
                                 df_ai['ngay_so'] = (df_ai['ngay_dat_hang'] - df_ai['ngay_dat_hang'].min()).dt.days
                                 df_ai['thu_trong_tuan'] = df_ai['ngay_dat_hang'].dt.dayofweek # 0 là Thứ 2, 6 là Chủ nhật
                                 
@@ -274,7 +274,7 @@ if uploaded_file is not None:
                                 st.warning("Cần nhiều dữ liệu ngày tháng hơn để hệ thống AI có thể học và dự báo.")
 
                         with tab2:
-                            st.markdown("#### Phát Hiện Giao Dịch Bất Thường (Isolation Forest)")
+                            st.markdown("#### Phát Hiện Giao Dịch Bất Thường")
                             model_data = df_selection[['so_luong', 'don_gia', 'loi_nhuan']].dropna()
                             if len(model_data) > 10:
                                 iso_forest = IsolationForest(contamination=0.05, random_state=42)
@@ -293,7 +293,7 @@ if uploaded_file is not None:
                                 st.warning("Cần ít nhất 10 dòng dữ liệu để chạy thuật toán.")
 
                         with tab3:
-                            st.markdown("#### Tìm Mức Giá Tối Ưu Lợi Nhuận (Polynomial Regression)")
+                            st.markdown("#### Tìm Mức Giá Để Tối Ưu Lợi Nhuận")
                             selected_product = st.selectbox("Chọn sản phẩm cần phân tích độ nhạy giá:", df_selection['ten_san_pham'].unique())
                             df_prod = df_selection[df_selection['ten_san_pham'] == selected_product]
                             if len(df_prod['don_gia'].unique()) > 2:
@@ -315,7 +315,7 @@ if uploaded_file is not None:
                                 st.warning("Sản phẩm này chưa có đủ sự biến động về giá để vẽ đường cong nhu cầu.")
 
                         with tab4:
-                            st.markdown("#### Phân Rã Dữ Liệu Thời Gian (Time Series Decomposition)")
+                            st.markdown("#### Phân Rã Dữ Liệu Thời Gian")
                             df_ts = revenue_by_date.set_index('ngay_dat_hang')
                             idx = pd.date_range(df_ts.index.min(), df_ts.index.max())
                             df_ts = df_ts.reindex(idx, fill_value=0)
