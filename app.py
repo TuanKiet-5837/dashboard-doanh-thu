@@ -267,7 +267,7 @@ if uploaded_file is not None:
                                 
                                 fig_pred = px.line(df_final_lr, x='ngay_dat_hang', y='doanh_thu', color='loai',
                                                    color_discrete_map={'Thực tế': '#2E86C1', 'Dự báo (AI)': '#E74C3C'},
-                                                   title="<b>Đường dự báo đã được AI học thêm quy luật ngày nghỉ</b>")
+                                                   title="")
                                 fig_pred.update_layout(plot_bgcolor="rgba(0,0,0,0)")
                                 st.plotly_chart(fig_pred, use_container_width=True)
                             else:
