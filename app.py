@@ -275,22 +275,54 @@ if uploaded_file is not None:
 
                         with tab2:
                             st.markdown("#### Phát Hiện Giao Dịch Bất Thường")
-                            model_data = df_selection[['so_luong', 'don_gia', 'loi_nhuan']].dropna()
+                            model_data = df_selection[['so_luong', 'don_gia', 'loi_nhuan']].dropna().copy()
                             if len(model_data) > 10:
                                 iso_forest = IsolationForest(contamination=0.05, random_state=42)
-                                model_data['anomaly'] = iso_forest.fit_predict(model_data)
-                                anomalies = df_selection.loc[model_data.index[model_data['anomaly'] == -1]]
-                                if not anomalies.empty:
-                                    st.error(f"⚠️ Phát hiện **{len(anomalies)}** giao dịch đáng ngờ.")
-                                    fig_anom = px.scatter(model_data, x='don_gia', y='loi_nhuan', 
-                                                          color=model_data['anomaly'].map({1: 'Bình thường', -1: 'Bất thường'}),
-                                                          color_discrete_map={'Bình thường': '#2E86C1', 'Bất thường': '#E74C3C'})
-                                    st.plotly_chart(fig_anom, use_container_width=True)
-                                    st.dataframe(anomalies[['ma_don_hang', 'ten_san_pham', 'so_luong', 'don_gia', 'loi_nhuan']])
-                                else:
-                                    st.success("✅ Dữ liệu an toàn, không có điểm bất thường đáng kể.")
+    
+                                    # ① Chạy mô hình chỉ trên cột số (không lẫn cột text)
+                            model_data['anomaly'] = iso_forest.fit_predict(
+                            model_data[['so_luong', 'don_gia', 'loi_nhuan']]
+                            )
+    
+                                # ② Gắn thêm thông tin định danh để hiển thị khi hover
+                            model_data['ma_don_hang'] = df_selection.loc[model_data.index, 'ma_don_hang'].values
+                            model_data['ten_san_pham'] = df_selection.loc[model_data.index, 'ten_san_pham'].values
+                            model_data['trang_thai']   = model_data['anomaly'].map({1: 'Bình thường', -1: 'Bất thường'})
+
+                            anomalies = df_selection.loc[model_data.index[model_data['anomaly'] == -1]]
+                            if not anomalies.empty:
+                                st.error(f"⚠️ Phát hiện **{len(anomalies)}** giao dịch đáng ngờ.")
+                                
+                                # ③ Vẽ scatter với hover đầy đủ thông tin
+                                fig_anom = px.scatter(
+                                    model_data,
+                                    x='don_gia',
+                                    y='loi_nhuan',
+                                    color='trang_thai',
+                                    color_discrete_map={'Bình thường': '#2E86C1', 'Bất thường': '#E74C3C'},
+                                    hover_data={
+                                        'ma_don_hang': True,   # ← Hiện mã đơn hàng khi hover
+                                        'ten_san_pham': True,  # ← Hiện tên sản phẩm khi hover
+                                        'so_luong': True,      # ← Hiện số lượng khi hover
+                                        'don_gia': ':,.0f',    # ← Format số có dấu phẩy
+                                        'loi_nhuan': ':,.0f',
+                                        'trang_thai': False,   # ← Ẩn cột này khỏi tooltip
+                                        'anomaly': False,      # ← Ẩn mã số -1/1 khỏi tooltip
+                                    },
+                                    labels={
+                                        'don_gia':      'Đơn giá (₫)',
+                                        'loi_nhuan':    'Lợi nhuận (₫)',
+                                        'ma_don_hang':  'Mã đơn hàng',
+                                        'ten_san_pham': 'Sản phẩm',
+                                        'so_luong':     'Số lượng',
+                                        'trang_thai':   'Trạng thái',
+                                    }
+                                )
+                                fig_anom.update_layout(plot_bgcolor="rgba(0,0,0,0)")
+                                st.plotly_chart(fig_anom, use_container_width=True)
+                                st.dataframe(anomalies[['ma_don_hang', 'ten_san_pham', 'so_luong', 'don_gia', 'loi_nhuan']])
                             else:
-                                st.warning("Cần ít nhất 10 dòng dữ liệu để chạy thuật toán.")
+                                st.success("✅ Dữ liệu an toàn, không có điểm bất thường đáng kể.")
 
                         with tab3:
                             st.markdown("#### Tìm Mức Giá Để Tối Ưu Lợi Nhuận")
